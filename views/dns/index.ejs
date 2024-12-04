@@ -1,0 +1,246 @@
+<div class="bg-white dark:bg-dark-secondary shadow overflow-hidden sm:rounded-lg">
+    <!-- Заголовок -->
+    <div class="px-4 py-5 sm:px-6">
+        <div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-dark-text-primary">
+                <% if (zone) { %>
+                    DNS записи для домена <%= zone.name %>
+                <% } else { %>
+                    DNS записи
+                <% } %>
+            </h3>
+            <% if (zone) { %>
+                <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-dark-text-secondary">
+                    Статус: <%= zone.status %>
+                </p>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Форма добавления DNS записи -->
+    <div class="border-t border-gray-200 dark:border-dark-border px-4 py-5 sm:p-6">
+        <form action="/dns/<%= zone.id %>/add" method="POST" class="space-y-6">
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-6">
+                <!-- Тип записи -->
+                <div class="sm:col-span-1 form-group">
+                    <label for="type" class="form-label">Тип записи</label>
+                    <select id="type" name="type" required class="form-select">
+                        <option value="A">A</option>
+                        <option value="AAAA">AAAA</option>
+                        <option value="CNAME">CNAME</option>
+                        <option value="TXT">TXT</option>
+                        <option value="MX">MX</option>
+                        <option value="NS">NS</option>
+                    </select>
+                </div>
+
+                <!-- Имя -->
+                <div class="sm:col-span-2 form-group">
+                    <label for="name" class="form-label">Имя</label>
+                    <input type="text" name="name" id="name" required class="form-input"
+                        placeholder="example.com">
+                    <p class="form-hint">Укажите имя записи</p>
+                </div>
+
+                <!-- Содержимое -->
+                <div class="sm:col-span-2 form-group">
+                    <label for="content" class="form-label">Содержимое</label>
+                    <input type="text" name="content" id="content" required class="form-input"
+                        placeholder="192.168.1.1">
+                    <p class="form-hint">IP адрес или значение записи</p>
+                </div>
+
+                <!-- TTL -->
+                <div class="sm:col-span-1 form-group">
+                    <label for="ttl" class="form-label">TTL</label>
+                    <select id="ttl" name="ttl" required class="form-select">
+                        <option value="1">Авто</option>
+                        <option value="120">2 мин</option>
+                        <option value="300">5 мин</option>
+                        <option value="600">10 мин</option>
+                        <option value="1800">30 мин</option>
+                        <option value="3600">1 час</option>
+                        <option value="7200">2 часа</option>
+                        <option value="18000">5 часов</option>
+                        <option value="43200">12 часов</option>
+                        <option value="86400">1 день</option>
+                    </select>
+                </div>
+
+                <!-- Прокси -->
+                <div class="sm:col-span-1 flex items-center pt-5">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" name="proxied" value="true" class="form-checkbox">
+                        <span class="ml-2 text-gray-700 dark:text-dark-text-primary">Включить прокси</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-3">
+                <button type="submit" class="btn btn-primary">
+                    Добавить запись
+                </button>
+                <button type="button" onclick="deleteAllRecords()" class="btn btn-danger">
+                    Удалить все записи
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Таблица DNS записей -->
+    <div class="mt-4 overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
+            <thead class="bg-gray-50 dark:bg-dark-accent">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider">Тип</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider">Имя</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider">Содержимое</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider">TTL</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider">Прокси</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider">Действия</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-dark-border bg-white dark:bg-dark-secondary">
+                <% records.forEach(record => { %>
+                    <tr class="hover:bg-gray-50 dark:hover:bg-dark-hover transition-colors duration-200">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <select onchange="updateRecord('<%= record.id %>', this)" class="form-select">
+                                <option value="A" <%= record.type === 'A' ? 'selected' : '' %>>A</option>
+                                <option value="AAAA" <%= record.type === 'AAAA' ? 'selected' : '' %>>AAAA</option>
+                                <option value="CNAME" <%= record.type === 'CNAME' ? 'selected' : '' %>>CNAME</option>
+                                <option value="TXT" <%= record.type === 'TXT' ? 'selected' : '' %>>TXT</option>
+                                <option value="MX" <%= record.type === 'MX' ? 'selected' : '' %>>MX</option>
+                                <option value="NS" <%= record.type === 'NS' ? 'selected' : '' %>>NS</option>
+                            </select>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="text" value="<%= record.name %>" 
+                                onchange="updateRecord('<%= record.id %>', this)"
+                                class="form-input">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="text" value="<%= record.content %>" 
+                                onchange="updateRecord('<%= record.id %>', this)"
+                                class="form-input">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <select onchange="updateRecord('<%= record.id %>', this)" class="form-select">
+                                <option value="1" <%= record.ttl === 1 ? 'selected' : '' %>>Авто</option>
+                                <option value="120" <%= record.ttl === 120 ? 'selected' : '' %>>2 мин</option>
+                                <option value="300" <%= record.ttl === 300 ? 'selected' : '' %>>5 мин</option>
+                                <option value="600" <%= record.ttl === 600 ? 'selected' : '' %>>10 мин</option>
+                                <option value="1800" <%= record.ttl === 1800 ? 'selected' : '' %>>30 мин</option>
+                                <option value="3600" <%= record.ttl === 3600 ? 'selected' : '' %>>1 час</option>
+                                <option value="7200" <%= record.ttl === 7200 ? 'selected' : '' %>>2 часа</option>
+                                <option value="18000" <%= record.ttl === 18000 ? 'selected' : '' %>>5 часов</option>
+                                <option value="43200" <%= record.ttl === 43200 ? 'selected' : '' %>>12 часов</option>
+                                <option value="86400" <%= record.ttl === 86400 ? 'selected' : '' %>>1 день</option>
+                            </select>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" 
+                                    <%= record.proxied ? 'checked' : '' %>
+                                    onchange="updateRecord('<%= record.id %>', this)"
+                                    class="form-checkbox h-4 w-4 text-dark-button dark:text-dark-button transition duration-150 ease-in-out">
+                                <span class="ml-2 dark:text-dark-text-primary"><%= record.proxied ? 'Включен' : 'Выключен' %></span>
+                            </label>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button onclick="deleteRecord('<%= record.id %>')" 
+                                class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors duration-200">
+                                Удалить
+                            </button>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+async function updateRecord(recordId, element) {
+    const row = document.getElementById(`record-row-${recordId}`);
+    const type = row.querySelector('select').value;
+    const name = row.querySelector('input[type="text"]:nth-of-type(1)').value;
+    const content = row.querySelector('input[type="text"]:nth-of-type(2)').value;
+    const ttl = parseInt(row.querySelector('select:nth-of-type(2)').value);
+    const proxied = row.querySelector('input[type="checkbox"]').checked;
+
+    try {
+        const response = await fetch(`/dns/<%= zone.id %>/records/${recordId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                type,
+                name,
+                content,
+                ttl,
+                proxied
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            alert('Ошибка при обновлении записи: ' + (data.error || 'Неизвестная ошибка'));
+            window.location.reload();
+        }
+    } catch (error) {
+        alert('Ошибка при обновлении записи');
+        console.error('Error:', error);
+        window.location.reload();
+    }
+}
+
+async function deleteRecord(recordId) {
+    if (confirm('Вы уверены, что хотите удалить эту запись?')) {
+        try {
+            const response = await fetch(`/dns/<%= zone.id %>/records/${recordId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Ошибка при удалении записи: ' + (data.error || 'Неизвестная ошибка'));
+            }
+        } catch (error) {
+            alert('Ошибка при удалении записи');
+            console.error('Error:', error);
+        }
+    }
+}
+
+async function deleteAllRecords() {
+    if (confirm('Вы уверены, что хотите удалить ВСЕ DNS записи? Это действие нельзя отменить!')) {
+        try {
+            const response = await fetch(`/dns/<%= zone.id %>/records`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Ошибка при удалении записей: ' + (data.error || 'Неизвестная ошибка'));
+            }
+        } catch (error) {
+            alert('Ошибка при удалении записей');
+            console.error('Error:', error);
+        }
+    }
+}
+</script> 

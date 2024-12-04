@@ -1,0 +1,117 @@
+<div class="bg-white dark:bg-dark-secondary shadow overflow-hidden sm:rounded-lg">
+    <div class="px-4 py-5 sm:px-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-dark-text-primary">
+            Настройки домена <%= zone.name %>
+        </h3>
+        <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-dark-text-secondary">
+            Статус: <%= zone.status %>
+        </p>
+    </div>
+    <div class="border-t border-gray-200 dark:border-dark-border">
+        <dl>
+            <!-- ID зоны -->
+            <div class="bg-gray-50 dark:bg-dark-accent px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-500 dark:text-dark-text-secondary">ID зоны</dt>
+                <dd class="mt-1 text-sm text-gray-900 dark:text-dark-text-primary sm:mt-0 sm:col-span-2">
+                    <%= zone.id %>
+                </dd>
+            </div>
+
+            <!-- Тип -->
+            <div class="bg-white dark:bg-dark-secondary px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-500 dark:text-dark-text-secondary">Тип</dt>
+                <dd class="mt-1 text-sm text-gray-900 dark:text-dark-text-primary sm:mt-0 sm:col-span-2">
+                    <%= zone.type %>
+                </dd>
+            </div>
+
+            <!-- DNS записи -->
+            <div class="bg-gray-50 dark:bg-dark-accent px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-500 dark:text-dark-text-secondary">DNS записи</dt>
+                <dd class="mt-1 text-sm text-gray-900 dark:text-dark-text-primary sm:mt-0 sm:col-span-2">
+                    <a href="/dns/<%= zone.id %>" class="text-indigo-600 dark:text-dark-text-accent hover:text-indigo-900 dark:hover:text-dark-text-primary">
+                        Управление DNS записями (<%= dns.length %>)
+                    </a>
+                </dd>
+            </div>
+
+            <!-- Редиректы -->
+            <div class="bg-white dark:bg-dark-secondary px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-500 dark:text-dark-text-secondary">Редиректы</dt>
+                <dd class="mt-1 text-sm text-gray-900 dark:text-dark-text-primary sm:mt-0 sm:col-span-2">
+                    <a href="/redirects/<%= zone.id %>" class="text-indigo-600 dark:text-dark-text-accent hover:text-indigo-900 dark:hover:text-dark-text-primary">
+                        Управление редиректами
+                    </a>
+                </dd>
+            </div>
+
+            <!-- Nameservers -->
+            <div class="bg-gray-50 dark:bg-dark-accent px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-500 dark:text-dark-text-secondary">Nameservers</dt>
+                <dd class="mt-1 text-sm text-gray-900 dark:text-dark-text-primary sm:mt-0 sm:col-span-2">
+                    <ul class="border border-gray-200 dark:border-dark-border rounded-md divide-y divide-gray-200 dark:divide-dark-border">
+                        <% zone.name_servers.forEach(ns => { %>
+                            <li class="pl-3 pr-4 py-3 flex items-center justify-between text-sm">
+                                <div class="w-0 flex-1 flex items-center">
+                                    <span class="ml-2 flex-1 w-0 truncate text-gray-900 dark:text-dark-text-primary">
+                                        <%= ns %>
+                                    </span>
+                                </div>
+                            </li>
+                        <% }) %>
+                    </ul>
+                </dd>
+            </div>
+
+            <!-- Under Attack Mode -->
+            <div class="bg-white dark:bg-dark-secondary px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-500 dark:text-dark-text-secondary">
+                    Under Attack Mode
+                </dt>
+                <dd class="mt-1 text-sm text-gray-900 dark:text-dark-text-primary sm:mt-0 sm:col-span-2">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" 
+                            <%= zone.security_level === 'under_attack' ? 'checked' : '' %>
+                            onchange="toggleUnderAttack(this.checked)"
+                            class="form-checkbox h-5 w-5 text-indigo-600 dark:text-dark-button transition duration-150 ease-in-out">
+                        <span class="ml-2 text-gray-900 dark:text-dark-text-primary">
+                            <%= zone.security_level === 'under_attack' ? 'Включен' : 'Выключен' %>
+                        </span>
+                    </label>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-dark-text-secondary">
+                        Включите этот режим при DDoS-атаке для дополнительной защиты
+                    </p>
+                </dd>
+            </div>
+        </dl>
+    </div>
+</div>
+
+<script>
+async function toggleUnderAttack(enabled) {
+    try {
+        const response = await fetch(`/domains/<%= zone.id %>/security`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                security_level: enabled ? 'under_attack' : 'medium'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert('Ошибка при изменении настроек: ' + (data.error || 'Неизвестная ошибка'));
+            window.location.reload();
+        }
+    } catch (error) {
+        alert('Ошибка при изменении настроек');
+        console.error('Error:', error);
+        window.location.reload();
+    }
+}
+</script> 

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru" class="h-full" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" 
+    x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" 
+    :class="{ 'dark': darkMode }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloudflare Manager</title>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="/css/main.css" rel="stylesheet">
+</head>
+<body class="h-full bg-gray-100 dark:bg-dark-primary text-gray-900 dark:text-dark-text-primary transition-colors duration-200">
+    <% if (typeof hideNav === 'undefined' || !hideNav) { %>
+    <nav class="bg-white dark:bg-dark-secondary shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <a href="/" class="text-xl font-bold text-gray-800 dark:text-dark-text-primary">
+                            Cloudflare Manager
+                        </a>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="/" 
+                            class="<%= path === '/' ? 'border-dark-button text-gray-900 dark:text-dark-text-primary' : 'border-transparent text-gray-500 dark:text-dark-text-secondary hover:text-gray-700 dark:hover:text-dark-text-primary' %> inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Панель управления
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Донат -->
+                    <a href="https://t.me/tortureseo/14" 
+                        target="_blank"
+                        class="inline-flex items-center text-gray-500 dark:text-dark-text-secondary hover:text-red-500 dark:hover:text-red-400 transition-colors duration-200">
+                        <svg class="h-5 w-5 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                        <span>Донат</span>
+                    </a>
+                    <!-- Переключатель темы -->
+                    <button @click="darkMode = !darkMode" 
+                        class="p-2 rounded-lg bg-gray-200 dark:bg-dark-accent hover:bg-gray-300 dark:hover:bg-dark-hover transition-colors duration-200">
+                        <svg x-show="!darkMode" class="h-5 w-5 text-gray-800" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                        <svg x-show="darkMode" class="h-5 w-5 text-dark-text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </button>
+                    <a href="/auth/logout" 
+                        class="text-gray-500 dark:text-dark-text-secondary hover:text-gray-700 dark:hover:text-dark-text-primary transition-colors duration-200">
+                        Выйти
+                    </a>
+                </div>
+            </div>
+            <!-- Мобильное меню -->
+            <div class="sm:hidden" x-data="{ isOpen: false }">
+                <button @click="isOpen = !isOpen" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                    <svg class="h-6 w-6" x-show="!isOpen" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <svg class="h-6 w-6" x-show="isOpen" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <div x-show="isOpen" class="px-2 pt-2 pb-3 space-y-1">
+                    <a href="/" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-200 hover:text-gray-900 hover:bg-gray-50 dark:hover:bg-dark-700">
+                        Панель управления
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <% } %>
+
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <%- body %>
+    </main>
+
+    <%- typeof script !== 'undefined' ? script : '' %>
+</body>
+</html> 

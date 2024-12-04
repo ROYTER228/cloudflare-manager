@@ -1,0 +1,121 @@
+<div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <div class="px-4 py-5 sm:px-6">
+        <div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+                Редиректы для домена <%= zone.name %>
+            </h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                Управление перенаправлениями
+            </p>
+        </div>
+    </div>
+
+    <!-- Форма добавления редиректа -->
+    <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
+        <form action="/redirects/<%= zone.id %>/add" method="POST" class="space-y-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <!-- Откуда -->
+                <div>
+                    <label for="source_url" class="block text-sm font-medium text-gray-700">Откуда</label>
+                    <input type="text" name="source_url" id="source_url" required
+                        class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                        placeholder="page или /page">
+                    <p class="mt-1 text-xs text-gray-500">
+                        Оставьте пустым для редиректа всего домена
+                    </p>
+                </div>
+
+                <!-- Куда -->
+                <div>
+                    <label for="target_url" class="block text-sm font-medium text-gray-700">Куда</label>
+                    <input type="text" name="target_url" id="target_url" required
+                        class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                        placeholder="example.com или example.com/page">
+                    <p class="mt-1 text-xs text-gray-500">
+                        Укажите домен и путь. HTTPS будет добавлен автоматически
+                    </p>
+                </div>
+
+                <!-- Тип редиректа -->
+                <div>
+                    <label for="status_code" class="block text-sm font-medium text-gray-700">Тип редиректа</label>
+                    <select id="status_code" name="status_code" required
+                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="301">301 (Постоянный)</option>
+                        <option value="302">302 (Временный)</option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">
+                        301 для постоянного перенаправления, 302 для временного
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit"
+                    class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Добавить редирект
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Список редиректов -->
+    <div class="mt-4">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Откуда</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Куда</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Тип</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Действия</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                <% redirects.forEach(redirect => { %>
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <%= redirect.targets[0].constraint.value %>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <%= redirect.actions[0].value.url %>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <%= redirect.actions[0].value.status_code === 301 ? 'Постоянный (301)' : 'Временный (302)' %>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button onclick="deleteRedirect('<%= redirect.id %>')" class="text-red-600 hover:text-red-900">
+                                Удалить
+                            </button>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+async function deleteRedirect(ruleId) {
+    if (confirm('Вы уверены, что хотите удалить этот редирект?')) {
+        try {
+            const response = await fetch(`/redirects/<%= zone.id %>/rules/${ruleId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Ошибка при удалении редиректа: ' + (data.error || 'Неизвестная ошибка'));
+            }
+        } catch (error) {
+            alert('Ошибка при удалении редиректа');
+            console.error('Error:', error);
+        }
+    }
+}
+</script> 
