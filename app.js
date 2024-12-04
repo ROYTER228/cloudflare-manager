@@ -114,13 +114,19 @@ app.get('/dashboard', authMiddleware, async (req, res) => {
         const headers = {
             'X-Auth-Email': req.session.email,
             'X-Auth-Key': req.session.cloudflareApi,
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
         };
 
-        const response = await axios.get('https://api.cloudflare.com/client/v4/zones', { headers });
+        const response = await axios.get('https://api.cloudflare.com/client/v4/zones', { 
+            headers,
+            params: {
+                per_page: 50,
+                status: 'active'
+            }
+        });
 
         if (!response.data.success) {
-            throw new Error('Failed to fetch zones');
+            throw new Error(response.data.errors[0].message || 'Failed to fetch zones');
         }
 
         res.render('dashboard', { 
@@ -131,12 +137,12 @@ app.get('/dashboard', authMiddleware, async (req, res) => {
         console.error('Dashboard error:', error.response?.data || error.message);
         res.render('dashboard', { 
             domains: [],
-            error: 'Ошибка при получении данных'
+            error: error.response?.data?.errors?.[0]?.message || 'Ошибка при получении данных'
         });
     }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3004;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

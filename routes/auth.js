@@ -7,28 +7,31 @@ router.get('/login', (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-    const { apiKey, email } = req.body;
-    
+    const { email, api_key } = req.body;
+
     try {
-        const response = await axios.get('https://api.cloudflare.com/client/v4/zones', {
-            headers: {
-                'X-Auth-Email': email,
-                'X-Auth-Key': apiKey,
-                'Content-Type': 'application/json',
-            },
-        });
+        // Проверяем API ключ
+        const headers = {
+            'X-Auth-Email': email,
+            'X-Auth-Key': api_key,
+            'Content-Type': 'application/json'
+        };
+
+        const response = await axios.get('https://api.cloudflare.com/client/v4/user', { headers });
 
         if (response.data.success) {
-            req.session.cloudflareApi = apiKey;
+            // Сохраняем данные в сессию
             req.session.email = email;
+            req.session.cloudflareApi = api_key;
             res.redirect('/dashboard');
         } else {
-            throw new Error('Invalid API key');
+            throw new Error('Invalid credentials');
         }
     } catch (error) {
         console.error('Auth error:', error.response?.data || error.message);
-        res.render('login', { 
-            error: 'Ошибка при проверке API ключа: ' + (error.response?.data?.errors?.[0]?.message || error.message)
+        res.render('login', {
+            error: 'Неверный email или API ключ',
+            hideNav: true
         });
     }
 });
