@@ -142,7 +142,7 @@ port=3306"""
         # Клонируем репозиторий
         subprocess.run([
             "git", "clone",
-            "https://github.com/ваш-репозиторий.git",
+            "https://github.com/ROYTER228/cloudflare-manager",
             "."
         ], check=True)
         
